@@ -4,13 +4,13 @@ import lombok.Getter;
 import org.springframework.http.HttpStatus;
 
 @Getter
-public class errorMessage {
+public class ErrorMessage {
 
     private String message;
 
     private String status;
 
-    public errorMessage(String message, HttpStatus status) {
+    public ErrorMessage(String message, HttpStatus status) {
         this.message = message;
         this.status = status.getReasonPhrase().toUpperCase();
     }

@@ -3,7 +3,7 @@ package ru.users.userservice.controller;
 import jakarta.validation.ValidationException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
-import ru.users.userservice.controller.exception.model.errorMessage;
+import ru.users.userservice.controller.exception.model.ErrorMessage;
 import ru.users.userservice.controller.exception.model.NotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -17,37 +17,37 @@ public class DefaultExceptionHandler {
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public errorMessage handleDataIntegrityViolationException(final DataIntegrityViolationException exception) {
+    public ErrorMessage handleDataIntegrityViolationException(final DataIntegrityViolationException exception) {
         log.info("Data is not valid {}", exception.getMessage());
-        return new errorMessage(exception.getMessage(), HttpStatus.BAD_REQUEST);
+        return new ErrorMessage(exception.getMessage(), HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    public errorMessage handleNotFoundException(final NotFoundException exception) {
+    public ErrorMessage handleNotFoundException(final NotFoundException exception) {
         log.info("Data not found {}", exception.getMessage());
-        return new errorMessage(exception.getMessage(), HttpStatus.NOT_FOUND);
+        return new ErrorMessage(exception.getMessage(), HttpStatus.NOT_FOUND);
     }
 
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public errorMessage handleMethodArgumentNotValidException(final MethodArgumentNotValidException exception) {
+    public ErrorMessage handleMethodArgumentNotValidException(final MethodArgumentNotValidException exception) {
         log.info(exception.getMessage());
-        return new errorMessage(exception.getMessage(), HttpStatus.BAD_REQUEST);
+        return new ErrorMessage(exception.getMessage(), HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public errorMessage handleValidationException(final ValidationException exception) {
+    public ErrorMessage handleValidationException(final ValidationException exception) {
         log.info("Validation error: {}", exception.getMessage());
-        return new errorMessage(exception.getMessage(), HttpStatus.BAD_REQUEST);
+        return new ErrorMessage(exception.getMessage(), HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    public errorMessage handleException(final Exception exception) {
+    public ErrorMessage handleException(final Exception exception) {
         log.error("Exception: ", exception);
-        return new errorMessage(exception.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        return new ErrorMessage(exception.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
 }
