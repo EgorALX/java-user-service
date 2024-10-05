@@ -1,0 +1,192 @@
+openapi: "3.0.2"
+info:
+  title: User Service API
+  version: "1.0"
+servers:
+  - url: https://localhost:8080
+tags:
+  - name: User
+    description: User-specific operations
+paths:
+  /users:
+    post:
+      tags:
+        - User
+      summary: Создание нового пользователя
+      operationId: createUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewUserDto'
+      responses:
+        '201':
+          description: Created
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/UserDto'
+        '400':
+          description: Bad request
+    get:
+      tags:
+        - User
+      summary: Получение информации о пользователях с применением фильтрации
+      operationId: getUsers
+      parameters:
+        - name: queryParams
+          in: query
+          schema:
+            $ref: '#/components/schemas/ParamsUserDto'
+      responses:
+        '200':
+          description: OK
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UserDto'
+        '400':
+          description: Bad request
+        '404':
+          description: Not found
+  /users/{userId}:
+    get:
+      tags:
+        - User
+      summary: Получение информации о конкретном пользователе по ID
+      operationId: getUserById
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: OK
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/UserDto'
+        '404':
+          description: Not found
+    patch:
+      tags:
+        - User
+      summary: Обновление информации о конкретном пользователе
+      operationId: updateUser
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateUserDto'
+      responses:
+        '200':
+          description: Updated
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/UpdateUserDto'
+        '400':
+          description: Bad request
+        '404':
+          description: Not found
+    delete:
+      tags:
+        - User
+      summary: Удаление информации о конкретном пользователе по ID
+      operationId: deleteUser
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '204':
+          description: No Content
+        '200':
+          description: OK
+
+components:
+  schemas:
+    UserDto:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        surname:
+          type: string
+        registration_date:
+          type: string
+          format: date
+    NewUserDto:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 256
+        surname:
+          type: string
+          minLength: 1
+          maxLength: 256
+        registration_date:
+          type: string
+          format: date
+      required:
+        - name
+        - surname
+        - registration_date
+    UpdateUserDto:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 256
+          description: Имя пользователя
+        surname:
+          type: string
+          maxLength: 256
+          description: Фамилия пользователя
+        registration_date:
+          type: string
+          format: date
+          description: Дата регистрации пользователя (в формате yyyy-MM-dd)
+    ParamsUserDto:
+      type: object
+      properties:
+        page:
+          type: integer
+          format: int32
+          default: 0
+        size:
+          type: integer
+          format: int32
+          default: 10
+        name:
+          type: string
+          maxLength: 256
+        surname:
+          type: string
+          maxLength: 256
+        registration_date:
+          type: string
+          format: date
+      description: Parameters for filtering and pagination

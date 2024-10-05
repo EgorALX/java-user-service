@@ -1,0 +1,30 @@
+databaseChangeLog:
+  - changeSet:
+      id:  1
+      author: author
+      comment: first liquibase migration
+      changes:
+        - createTable:
+            tableName: users
+            columns:
+              - column:
+                  name:  user_id
+                  type: int
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+              - column:
+                  name:  name
+                  type: varchar(256)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: surname
+                  type: varchar(256)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: registration_date
+                  type: timestamp
+                  constraints:
+                    nullable: false
