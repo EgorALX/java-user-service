@@ -1,7 +1,12 @@
 package ru.users.userservice.controller;
 
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Size;
 import org.springdoc.core.annotations.ParameterObject;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import ru.users.userservice.service.UserService;
@@ -15,6 +20,7 @@ import ru.users.userservice.model.UpdateUserDto;
 import ru.users.userservice.model.UserDto;
 import ru.users.userservice.model.ParamsUserDto;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -58,11 +64,15 @@ public class UserController implements UsersApi {
 
     @Override
     @GetMapping
-    public ResponseEntity<List<UserDto>> getUsers(@ParameterObject ParamsUserDto queryParams) {
-        log.info("Starting getUsers method. Getting users with params: {}", queryParams);
-        PageRequest pageRequest = PageRequest.of(queryParams.getPage(), queryParams.getSize());
-        List<UserDto> users = userService.getUsers(queryParams.getName(), queryParams.getSurname(),
-                queryParams.getRegistrationDate(), pageRequest);
+    public ResponseEntity<List<UserDto>> getUsers(@Parameter @Valid @RequestParam(value = "page", required = false, defaultValue = "0") Integer page,
+                                                  @Parameter @Valid @RequestParam(value = "size", required = false, defaultValue = "10") Integer size,
+                                                  @Size(max = 256) @Parameter @Valid @RequestParam(value = "name", required = false) String name,
+                                                  @Size(max = 256) @Parameter @Valid @RequestParam(value = "surname", required = false) String surname,
+                                                  @Parameter @Valid @RequestParam(value = "registration_date", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate registrationDate
+    ) {
+        log.info("Starting getUsers method. Getting users with params: page = {}, size = {}, name = {}, surname = {}, registrationDate {}", page, size, name, surname, registrationDate);
+        PageRequest pageRequest = PageRequest.of(page, size);
+        List<UserDto> users = userService.getUsers(name, surname, registrationDate, pageRequest);
         log.info("Completed getUsers method successfully. Results: {}", users);
         return ResponseEntity.ok(users);
     }

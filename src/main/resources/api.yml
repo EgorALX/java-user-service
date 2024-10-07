@@ -35,10 +35,38 @@ paths:
       summary: Получение информации о пользователях с применением фильтрации
       operationId: getUsers
       parameters:
-        - name: queryParams
+        - name: page
           in: query
           schema:
-            $ref: '#/components/schemas/ParamsUserDto'
+            type: integer
+            format: int32
+            default: 0
+          description: Номер страницы для пагинации
+        - name: size
+          in: query
+          schema:
+            type: integer
+            format: int32
+            default: 10
+          description: Количество элементов на странице
+        - name: name
+          in: query
+          schema:
+            type: string
+            maxLength: 256
+          description: Имя пользователя для фильтрации
+        - name: surname
+          in: query
+          schema:
+            type: string
+            maxLength: 256
+          description: Фамилия пользователя для фильтрации
+        - name: registration_date
+          in: query
+          schema:
+            type: string
+            format: date
+          description: Дата регистрации пользователя для фильтрации
       responses:
         '200':
           description: OK

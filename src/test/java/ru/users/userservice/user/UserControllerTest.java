@@ -120,8 +120,7 @@ public class UserControllerTest {
     void getUsersTest() {
         int page = 1;
         int size = 10;
-        PageRequest pageRequest = PageRequest.of(page, size);
-        when(userService.getUsers(any(String.class), any(String.class), any(LocalDate.class), any()))
+        when(userService.getUsers(any(), any(), any(), any()))
                 .thenReturn(List.of(userDto));
 
         mockMvc.perform(get("/users")
