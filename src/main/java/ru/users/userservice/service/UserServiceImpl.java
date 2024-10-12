@@ -26,10 +26,6 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public List<UserDto> getUsers(String name, String surname, LocalDate registrationDate, PageRequest pageRequest) {
-        System.out.println(name);
-        System.out.println(surname);
-        System.out.println(registrationDate);
-        System.out.println(pageRequest);
         List<User> users = userRepository.getUsersByParams(name,
                 surname, registrationDate, pageRequest);
         if (users.isEmpty()) throw new NotFoundException("List of users is empty");

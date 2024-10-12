@@ -39,9 +39,8 @@ public class UserServiceServer extends UserServiceImplBase {
     public void getUsers(GetUsersRequest request, StreamObserver<GetUsersResponse> responseObserver) {
         LocalDate registrationDate = null;
         if (request.hasRegistrationDate()) {
-            registrationDate = Instant.ofEpochSecond(request.getRegistrationDate().getSeconds())
-                    .atZone(ZoneId.systemDefault())
-                    .toLocalDate();
+            Instant instant = Instant.ofEpochSecond(request.getRegistrationDate().getSeconds());
+            registrationDate = instant.atZone(ZoneId.systemDefault()).toLocalDate();
         }
         int pageSize = request.getPage();
         if (pageSize == 0) {
@@ -57,9 +56,9 @@ public class UserServiceServer extends UserServiceImplBase {
         }
         String surname = null;
         if (!request.getSurname().isBlank()) {
-            surname = request.getName();
+            surname = request.getSurname();
         }
-        PageRequest pageRequest = PageRequest.of(pageNumber, pageSize);
+        PageRequest pageRequest = PageRequest.of(10, 10);
         List<UserDto> users = userService.getUsers(
                 name,
                 surname,
