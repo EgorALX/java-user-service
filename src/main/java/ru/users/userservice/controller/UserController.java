@@ -1,11 +1,9 @@
 package ru.users.userservice.controller;
 
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Size;
-import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,7 +16,6 @@ import org.springframework.web.bind.annotation.*;
 import ru.users.userservice.model.NewUserDto;
 import ru.users.userservice.model.UpdateUserDto;
 import ru.users.userservice.model.UserDto;
-import ru.users.userservice.model.ParamsUserDto;
 
 import java.time.LocalDate;
 import java.util.List;

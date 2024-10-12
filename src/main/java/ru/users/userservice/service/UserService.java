@@ -11,6 +11,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 public interface UserService {
+
     List<UserDto> getUsers(String name, String surname, LocalDate registrationDate, PageRequest pageRequest);
 
     UserDto getById(Long userId);
@@ -20,4 +21,5 @@ public interface UserService {
     UpdateUserDto update(@Positive Long userId, @Valid UpdateUserDto dto);
 
     Boolean removeById(@Positive Long userId);
+
 }

@@ -1,0 +1,61 @@
+syntax = "proto3";
+
+package ru.users.userservice.grpc;
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/wrappers.proto";
+
+service UserService {
+  rpc GetUsers(GetUsersRequest) returns (GetUsersResponse) {}
+  rpc GetById(GetByIdRequest) returns (UserResponse) {}
+  rpc Add(AddRequest) returns (UserResponse) {}
+  rpc Update(UpdateRequest) returns (UpdateResponse) {}
+  rpc RemoveById(RemoveByIdRequest) returns (google.protobuf.BoolValue) {}
+}
+
+message GetUsersRequest {
+  string name = 1;
+  string surname = 2;
+  google.protobuf.Timestamp registration_date = 3;
+  int32 page = 4;
+  int32 size = 5;
+}
+
+message GetUsersResponse {
+  repeated UserResponse users = 1;
+}
+
+message GetByIdRequest {
+  int64 userId = 1;
+}
+
+message UserResponse {
+  int64 userId = 1;
+  string name = 2;
+  string surname = 3;
+  google.protobuf.Timestamp registration_date = 4;
+}
+
+message AddRequest {
+  string name = 1;
+  string surname = 2;
+  google.protobuf.Timestamp registration_date = 3;
+}
+
+message UpdateRequest {
+  int64 userId = 1;
+  string name = 2;
+  string surname = 3;
+  google.protobuf.Timestamp registration_date = 4;
+}
+
+message UpdateResponse {
+  int64 userId = 1;
+  string name = 2;
+  string surname = 3;
+  google.protobuf.Timestamp registration_date = 4;
+}
+
+message RemoveByIdRequest {
+  int64 userId = 1;
+}
