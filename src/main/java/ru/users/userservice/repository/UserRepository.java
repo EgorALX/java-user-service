@@ -16,7 +16,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Query("SELECT u FROM User AS u WHERE " +
             "(LOWER(u.name) = LOWER(:name) OR :name IS NULL) AND " +
             "(LOWER(u.surname) = LOWER(:surname) OR :surname IS NULL) AND " +
-            "(u.registrationDate = :registrationDate OR :registrationDate IS NULL)")
+            "(u.registrationDate = :registrationDate OR CAST(:registrationDate AS DATE) IS NULL)")
     List<User> getUsersByParams(@Param("name") String name,
                                 @Param("surname") String surname,
                                 @Param("registrationDate") LocalDate registrationDate,

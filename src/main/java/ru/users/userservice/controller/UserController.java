@@ -61,13 +61,20 @@ public class UserController implements UsersApi {
 
     @Override
     @GetMapping
-    public ResponseEntity<List<UserDto>> getUsers(@Parameter @Valid @RequestParam(value = "page", required = false, defaultValue = "0") Integer page,
-                                                  @Parameter @Valid @RequestParam(value = "size", required = false, defaultValue = "10") Integer size,
-                                                  @Size(max = 256) @Parameter @Valid @RequestParam(value = "name", required = false) String name,
-                                                  @Size(max = 256) @Parameter @Valid @RequestParam(value = "surname", required = false) String surname,
-                                                  @Parameter @Valid @RequestParam(value = "registration_date", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate registrationDate
+    public ResponseEntity<List<UserDto>> getUsers(@Parameter @Valid @RequestParam(value = "page", required = false,
+                                                          defaultValue = "0") Integer page,
+                                                  @Parameter @Valid @RequestParam(value = "size", required = false,
+                                                          defaultValue = "10") Integer size,
+                                                  @Size(max = 256) @Parameter @Valid @RequestParam(value = "name",
+                                                          required = false) String name,
+                                                  @Size(max = 256) @Parameter @Valid @RequestParam(value = "surname",
+                                                          required = false) String surname,
+                                                  @Parameter @Valid @RequestParam(value = "registration_date",
+                                                          required = false) @DateTimeFormat(pattern = "yyyy-MM-dd")
+                                                      LocalDate registrationDate
     ) {
-        log.info("Starting getUsers method. Getting users with params: page = {}, size = {}, name = {}, surname = {}, registrationDate {}", page, size, name, surname, registrationDate);
+        log.info("Starting getUsers method. Getting users with params: page = {}, size = {}, name = {}, surname = {}," +
+                " registrationDate {}", page, size, name, surname, registrationDate);
         PageRequest pageRequest = PageRequest.of(page, size);
         List<UserDto> users = userService.getUsers(name, surname, registrationDate, pageRequest);
         log.info("Completed getUsers method successfully. Results: {}", users);

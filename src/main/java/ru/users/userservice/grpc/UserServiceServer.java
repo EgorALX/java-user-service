@@ -1,6 +1,5 @@
 package ru.users.userservice.grpc;
 
-import com.google.protobuf.Timestamp;
 import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 import lombok.RequiredArgsConstructor;
@@ -8,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import net.devh.boot.grpc.server.service.GrpcService;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
+import ru.users.userservice.controller.exception.model.NotFoundException;
 import ru.users.userservice.grpc.UserServiceGrpc.UserServiceImplBase;
 import ru.users.userservice.model.NewUserDto;
 import ru.users.userservice.model.UpdateUserDto;
@@ -35,150 +35,111 @@ public class UserServiceServer extends UserServiceImplBase {
 
     private final UserService userService;
 
+    private final GrpcMapper grpcMapper;
+
     @Override
     public void getUsers(GetUsersRequest request, StreamObserver<GetUsersResponse> responseObserver) {
-        LocalDate registrationDate = null;
-        if (request.hasRegistrationDate()) {
-            Instant instant = Instant.ofEpochSecond(request.getRegistrationDate().getSeconds());
-            registrationDate = instant.atZone(ZoneId.systemDefault()).toLocalDate();
+        log.info("Received getUsers request: name={}, surname={}, registration_date={}, page={}",
+                request.getName(), request.getSurname(), request.getRegistrationDate(), request.getPage());
+
+        try {
+            LocalDate registrationDate = (request.hasRegistrationDate()) ? Instant.ofEpochSecond(request.getRegistrationDate().getSeconds())
+                    .atZone(ZoneId.systemDefault()).toLocalDate() : null;
+            int pageNumber = request.getSize();
+            int pageSize = (request.getPage() == 0) ? 10 : request.getPage();
+            String name = (!request.getName().isEmpty()) ? request.getName() : null;
+            String surname = (!request.getSurname().isEmpty()) ? request.getSurname() : null;
+            PageRequest pageRequest = PageRequest.of(pageNumber, pageSize);
+
+            List<UserDto> users = userService.getUsers(name, surname, registrationDate, pageRequest);
+            log.info("Found {} users matching criteria", users.size());
+
+            GetUsersResponse.Builder responseBuilder = GetUsersResponse.newBuilder();
+            users.stream().map(grpcMapper::convertUserDtoToUserResponse).forEach(responseBuilder::addUsers);
+            GetUsersResponse response = responseBuilder.build();
+            responseObserver.onNext(response);
+            log.info("Sent getUsers response");
+        } catch (NotFoundException e) {
+            log.warn("User not found", e);
+            responseObserver.onError(Status.NOT_FOUND.asRuntimeException());
+        } catch (Exception e) {
+            log.error("Unexpected error occurred while getting users", e);
+            responseObserver.onError(Status.INTERNAL.withDescription(e.getMessage()).asRuntimeException());
+        } finally {
+            responseObserver.onCompleted();
         }
-        int pageSize = request.getPage();
-        if (pageSize == 0) {
-            pageSize = 10;
-        }
-        int pageNumber = request.getSize();
-        if (pageNumber == 0) {
-            pageNumber = 10;
-        }
-        String name = null;
-        if (!request.getName().isBlank()) {
-            name = request.getName();
-        }
-        String surname = null;
-        if (!request.getSurname().isBlank()) {
-            surname = request.getSurname();
-        }
-        PageRequest pageRequest = PageRequest.of(10, 10);
-        List<UserDto> users = userService.getUsers(
-                name,
-                surname,
-                registrationDate,
-                pageRequest
-        );
-        GetUsersResponse.Builder responseBuilder = GetUsersResponse.newBuilder();
-        for (UserDto user : users) {
-            responseBuilder.addUsers(convertToProto(user));
-        }
-        GetUsersResponse response = responseBuilder.build();
-        responseObserver.onNext(response);
-        responseObserver.onCompleted();
     }
 
     @Override
     public void getById(GetByIdRequest request, StreamObserver<UserResponse> responseObserver) {
-        log.debug("Received GetById request for user ID: {}", request.getUserId());
-        var user = userService.getById(request.getUserId());
-        log.debug("Found user: {}, or not found", user != null ? user : "null");
+        log.info("Received getById request for user ID: {}", request.getUserId());
 
-        if (user != null) {
-            var response = convertToProto(user);
-            log.info("Returning user data for ID: {}", user.getId());
+        try {
+            UserDto user = userService.getById(request.getUserId());
+            log.info("Found user with ID: {}", user.getId());
+            UserResponse response = grpcMapper.convertUserDtoToUserResponse(user);
             responseObserver.onNext(response);
-        } else {
-            log.warn("User not found for ID: {}", request.getUserId());
+        } catch (NotFoundException e) {
+            log.warn("User not found", e);
             responseObserver.onError(Status.NOT_FOUND.asRuntimeException());
+        } catch (Exception e) {
+            log.error("Unexpected error occurred while getting user by ID", e);
+            responseObserver.onError(Status.INTERNAL.withDescription(e.getMessage()).asRuntimeException());
+        } finally {
+            responseObserver.onCompleted();
         }
-
-        log.debug("Completed GetById operation");
-        responseObserver.onCompleted();
     }
 
     @Override
     public void add(AddRequest request, StreamObserver<UserResponse> responseObserver) {
-        NewUserDto newUser = convertFromProto(request);
-        UserDto addedUser = userService.add(newUser);
-        if (addedUser != null) {
-            UserResponse response = convertToProto(addedUser);
+        log.info("Received add request for new user");
+
+        try {
+            NewUserDto newUser = grpcMapper.convertAddRequestToNewUserDto(request);
+            UserDto addedUser = userService.add(newUser);
+            log.info("Added new user with ID: {}", addedUser.getId());
+            UserResponse response = grpcMapper.convertUserDtoToUserResponse(addedUser);
             responseObserver.onNext(response);
-        } else {
+        } catch (Exception e) {
+            log.error("Failed to add user", e);
             responseObserver.onError(Status.INTERNAL.withDescription("Failed to add user").asRuntimeException());
+        } finally {
+            responseObserver.onCompleted();
         }
-        responseObserver.onCompleted();
     }
 
     @Override
     public void update(UpdateRequest request, StreamObserver<UpdateResponse> responseObserver) {
-        UpdateUserDto updateUser = convertFromProto(request);
-        UpdateUserDto updatedUser = userService.update(request.getUserId(), updateUser);
-
-        if (updatedUser != null) {
-            UpdateResponse response = convertToProto(updatedUser);
+        log.info("Received update request for user");
+        try {
+            UpdateUserDto updateUserDto = grpcMapper.convertUpdateRequestToUpdateUserDto(request);
+            UpdateUserDto updatedUser = userService.update(request.getUserId(), updateUserDto);
+            log.info("Updated user with ID: {}", request.getUserId());
+            UpdateResponse response = grpcMapper.convertUpdateUserDtoToUpdateResponse(updatedUser);
             responseObserver.onNext(response);
-        } else {
+        } catch (Exception e) {
+            log.error("Failed to update user", e);
             responseObserver.onError(Status.INTERNAL.withDescription("Failed to update user").asRuntimeException());
+        } finally {
+            responseObserver.onCompleted();
         }
-        responseObserver.onCompleted();
     }
 
     @Override
     public void removeById(RemoveByIdRequest request, StreamObserver<com.google.protobuf.BoolValue> responseObserver) {
-        boolean success = userService.removeById(request.getUserId());
+        log.info("Received removeById request for user ID: {}", request.getUserId());
 
-        Builder boolBuilder = BoolValue.newBuilder();
-        boolBuilder.setValue(success);
-
-        responseObserver.onNext(boolBuilder.build());
-        responseObserver.onCompleted();
-    }
-
-    private UserResponse convertToProto(UserDto user) {
-        LocalDate registrationDate = user.getRegistrationDate();
-        ZonedDateTime zdt = registrationDate.atStartOfDay(ZoneOffset.UTC);
-        return UserResponse.newBuilder()
-                .setUserId(user.getId())
-                .setName(user.getName())
-                .setSurname(user.getSurname())
-                .setRegistrationDate(Timestamp.newBuilder()
-                        .setSeconds(zdt.toInstant().getEpochSecond())
-                        .setNanos(zdt.toInstant().getNano())
-                        .build())
-                .build();
-    }
-
-    private NewUserDto convertFromProto(AddRequest request) {
-        LocalDate registrationDate = Instant.ofEpochSecond(request.getRegistrationDate().getSeconds())
-                .atZone(ZoneId.systemDefault())
-                .toLocalDate();
-        return new NewUserDto(
-                request.getName(),
-                request.getSurname(),
-                registrationDate
-        );
-    }
-
-    private UpdateUserDto convertFromProto(UpdateRequest request) {
-        LocalDate registrationDate = null;
-        if (request.hasRegistrationDate()) {
-            registrationDate = Instant.ofEpochSecond(request.getRegistrationDate().getSeconds())
-                    .atZone(ZoneId.systemDefault())
-                    .toLocalDate();
+        try {
+            boolean success = userService.removeById(request.getUserId());
+            log.info("User with ID {} exists: {}", request.getUserId(), success);
+            Builder boolBuilder = BoolValue.newBuilder();
+            boolBuilder.setValue(success);
+            responseObserver.onNext(boolBuilder.build());
+        } catch (Exception e) {
+            log.error("Failed to check if user exists", e);
+            responseObserver.onError(Status.INTERNAL.withDescription("Failed to check if user exists").asRuntimeException());
+        } finally {
+            responseObserver.onCompleted();
         }
-        UpdateUserDto updateUserDto = new UpdateUserDto();
-        updateUserDto.setName(request.getName());
-        updateUserDto.setSurname(request.getSurname());
-        updateUserDto.setRegistrationDate(registrationDate);
-        return updateUserDto;
-    }
-
-    private UpdateResponse convertToProto(UpdateUserDto user) {
-        LocalDate registrationDate = user.getRegistrationDate();
-        ZonedDateTime zdt = registrationDate != null ? registrationDate.atStartOfDay(ZoneOffset.UTC) : null;
-        return UpdateResponse.newBuilder()
-                .setName(user.getName())
-                .setSurname(user.getSurname())
-                .setRegistrationDate(zdt != null ? Timestamp.newBuilder()
-                        .setSeconds(zdt.toInstant().getEpochSecond())
-                        .build() : null)
-                .build();
     }
 }

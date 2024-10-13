@@ -50,10 +50,9 @@ message UpdateRequest {
 }
 
 message UpdateResponse {
-  int64 userId = 1;
-  string name = 2;
-  string surname = 3;
-  google.protobuf.Timestamp registration_date = 4;
+  string name = 1;
+  string surname = 2;
+  google.protobuf.Timestamp registration_date = 3;
 }
 
 message RemoveByIdRequest {

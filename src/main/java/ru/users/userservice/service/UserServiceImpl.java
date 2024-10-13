@@ -26,8 +26,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public List<UserDto> getUsers(String name, String surname, LocalDate registrationDate, PageRequest pageRequest) {
-        List<User> users = userRepository.getUsersByParams(name,
-                surname, registrationDate, pageRequest);
+        List<User> users = userRepository.getUsersByParams(name, surname, registrationDate, pageRequest);
         if (users.isEmpty()) throw new NotFoundException("List of users is empty");
         return users.stream().map(userMapper::toUserDto).collect(Collectors.toList());
     }
@@ -50,6 +49,7 @@ public class UserServiceImpl implements UserService {
         Optional.ofNullable(dto.getName()).ifPresent(user::setName);
         Optional.ofNullable(dto.getSurname()).ifPresent(user::setSurname);
         Optional.ofNullable(dto.getRegistrationDate()).ifPresent(user::setRegistrationDate);
+        userRepository.save(user);
         return userMapper.toUpdateDto(user);
     }
 
